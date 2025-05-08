@@ -13,7 +13,7 @@ export interface TwilioClient {
 
 export interface ProcessTwilioWebhookArgs {
   text: () => Promise<string>
-  headers: { get: (key: string) => string | undefined }
+  headers: { get: (key: string) => string | null }
   url: string
   env: TwilioWebhookEnv
   twilioClient: TwilioClient
