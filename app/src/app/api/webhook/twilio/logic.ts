@@ -1,6 +1,40 @@
 import { generateResponse } from './openai'
 
-export async function processTwilioWebhook({ text, headers, url, env, twilioClient, validateRequest }) {
+export interface TwilioWebhookEnv {
+  TWILIO_AUTH_TOKEN: string
+  TWILIO_PHONE_NUMBER: string
+}
+
+export interface TwilioClient {
+  messages: {
+    create: (opts: { body: string; to: string; from: string }) => Promise<any>
+  }
+}
+
+export interface ProcessTwilioWebhookArgs {
+  text: () => Promise<string>
+  headers: { get: (key: string) => string | undefined }
+  url: string
+  env: TwilioWebhookEnv
+  twilioClient: TwilioClient
+  validateRequest: (
+    authToken: string,
+    signature: string,
+    url: string,
+    params: Record<string, any>
+  ) => boolean
+}
+
+export interface ProcessTwilioWebhookResult {
+  status: number
+  body: string
+}
+
+/**
+ * Processes a Twilio webhook request and returns a status/body result.
+ * All dependencies are injected for testability.
+ */
+export async function processTwilioWebhook({ text, headers, url, env, twilioClient, validateRequest }: ProcessTwilioWebhookArgs): Promise<ProcessTwilioWebhookResult> {
   try {
     const body = await text()
     const params = Object.fromEntries(new URLSearchParams(body))

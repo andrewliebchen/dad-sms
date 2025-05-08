@@ -125,23 +125,42 @@ Each iteration should:
 ## Development Phases
 
 ### Iteration 1: Basic SMS Communication (Week 1)
-**Goal**: Establish core SMS communication with basic response
-- [ ] Project setup with Next.js and TypeScript
-  - [ ] Write tests for project structure
-  - [ ] Set up testing framework (Jest + React Testing Library)
-  - [ ] Configure CI pipeline
-- [ ] Basic Twilio webhook implementation
-  - [ ] Write tests for webhook validation
-  - [ ] Implement webhook endpoint
-  - [ ] Add error handling tests
-- [ ] Initial OpenAI integration
-  - [ ] Write tests for API client
-  - [ ] Implement basic response generation
-  - [ ] Add error handling
-- [ ] Basic message handling
-  - [ ] Write tests for message processing
-  - [ ] Implement message flow
-  - [ ] Add validation
+
+**Status:** Complete (Green phase, tests passing)
+
+#### What was built
+- Project set up with Next.js, TypeScript, and Jest
+- Twilio webhook endpoint implemented as an API route
+- All business logic extracted to a pure function (`processTwilioWebhook`) for testability
+- OpenAI integration stubbed for now
+- Comprehensive test suite covers:
+  - Signature validation (missing/invalid)
+  - Required parameter validation
+  - Calls to OpenAI and Twilio
+- All tests pass (green phase)
+
+#### TDD Process
+- Followed red-green-refactor cycle ([Codecademy: Red, Green, Refactor](https://www.codecademy.com/article/tdd-red-green-refactor))
+- Wrote failing tests first (red)
+- Implemented minimal code to pass tests (green)
+- Refactored for type safety, maintainability, and clarity (refactor)
+
+#### Notes for Future Agents
+- **Testing Next.js API routes:**
+  - Directly testing API route files that import from `next/server` can cause issues in Node/Jest due to missing Web APIs (e.g., `Request`).
+  - **Best practice:** Extract all business logic to a pure function in a separate file (e.g., `logic.ts`). Test this function directly with Jest.
+  - Keep the API route as a thin adapter that passes real dependencies to the pure function.
+- **Mocking dependencies:**
+  - Use dependency injection for all external services (Twilio, OpenAI, env vars, etc.) in the pure function.
+  - In tests, mock these dependencies and set return values as needed.
+- **TypeScript:**
+  - Add explicit types to all function signatures, mocks, and helpers for maintainability and IDE support.
+- **Jest mocking:**
+  - Use only one mocking approach per function (either `jest.mock` or `jest.spyOn`, not both).
+  - If using `jest.mock`, set return values on the imported mock function in each test.
+- **Test structure:**
+  - Use helpers for repeated setup (e.g., `createMockRequest`).
+  - Add docstrings to clarify intent.
 
 **Deployable Feature**: Basic SMS response system
 
