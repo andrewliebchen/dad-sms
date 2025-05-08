@@ -133,6 +133,7 @@ Each iteration should:
 - Twilio webhook endpoint implemented as an API route
 - All business logic extracted to a pure function (`processTwilioWebhook`) for testability
 - OpenAI integration stubbed for now
+- **Simple web client (test chat UI) added at `/test-chat` for local AI response testing, bypassing Twilio.**
 - Comprehensive test suite covers:
   - Signature validation (missing/invalid)
   - Required parameter validation
@@ -237,6 +238,9 @@ Each iteration should:
 - Webhook handling
 - Database operations
 - External service integration
+
+### Manual/Local Testing
+- **Simple web client at `/test-chat` allows developers to interact with the AI logic directly, without Twilio, for rapid iteration and debugging.**
 
 ### End-to-End Tests (Cypress)
 - Full message flow
