@@ -34,8 +34,6 @@ describe('Twilio Webhook Logic', () => {
   }
   const validateRequest = jest.fn<ReturnType<ProcessTwilioWebhookArgs['validateRequest']>, Parameters<ProcessTwilioWebhookArgs['validateRequest']>>()
 
-  let generateResponseSpy: jest.SpyInstance;
-
   beforeEach(() => {
     jest.resetAllMocks();
     (generateResponse as jest.Mock).mockResolvedValue('AI response');

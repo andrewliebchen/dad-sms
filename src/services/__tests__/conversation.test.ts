@@ -3,6 +3,7 @@
  */
 import { PrismaClient } from '@prisma/client';
 import { createConversation, getConversationById, getConversationsByUserId } from '../conversation';
+import type { Conversation } from '../conversation';
 
 describe('Conversation Storage Service', () => {
   const prisma = new PrismaClient();
@@ -69,7 +70,7 @@ describe('Conversation Storage Service', () => {
       const conv1 = await createConversation(userId, tags1);
       const conv2 = await createConversation(userId, tags2);
       const conversations = await getConversationsByUserId(userId);
-      const ids = conversations.map((c: any) => c.id);
+      const ids = conversations.map((c: Conversation) => c.id);
       expect(ids).toContain(conv1.id);
       expect(ids).toContain(conv2.id);
     });

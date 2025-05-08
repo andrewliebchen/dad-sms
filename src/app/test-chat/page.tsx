@@ -6,6 +6,24 @@ interface Message {
   text: string;
 }
 
+// Define a type for the expected message shape from the API
+interface ApiMessage {
+  direction: 'INCOMING' | 'OUTGOING';
+  content: string;
+}
+
+function isApiMessage(msg: unknown): msg is ApiMessage {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    'direction' in msg &&
+    (msg as { direction?: unknown }).direction !== undefined &&
+    ((msg as { direction: unknown }).direction === 'INCOMING' || (msg as { direction: unknown }).direction === 'OUTGOING') &&
+    'content' in msg &&
+    typeof (msg as { content?: unknown }).content === 'string'
+  );
+}
+
 const TEST_PHONE = "+15555555555";
 
 export default function TestChatPage() {
@@ -22,15 +40,20 @@ export default function TestChatPage() {
         const data = await res.json();
         if (res.ok && Array.isArray(data.messages)) {
           setMessages(
-            data.messages.map((msg: any) => ({
-              from: msg.direction === "INCOMING" ? "user" : "ai",
-              text: msg.content,
-            }))
+            data.messages.map((msg: unknown) => {
+              if (isApiMessage(msg)) {
+                return {
+                  from: msg.direction === 'INCOMING' ? 'user' : 'ai',
+                  text: msg.content,
+                };
+              }
+              return { from: 'ai', text: '' };
+            })
           );
         } else {
           setError(data.error || "Failed to load messages");
         }
-      } catch (err) {
+      } catch {
         setError("Network error");
       }
     };
@@ -55,7 +78,7 @@ export default function TestChatPage() {
       } else {
         setError(data.error || "Unknown error");
       }
-    } catch (err) {
+    } catch {
       setError("Network error");
     } finally {
       setLoading(false);
