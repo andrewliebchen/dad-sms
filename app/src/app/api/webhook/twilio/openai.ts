@@ -1,4 +1,7 @@
-export async function generateResponse(message: string, context?: any): Promise<string> {
+/**
+ * Stub for OpenAI response generation. Replace with real implementation.
+ */
+export async function generateResponse(_message: string, _context?: Record<string, unknown>): Promise<string> {
   // Stub: returns a fixed string for now
   return 'AI response'
 } 

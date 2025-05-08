@@ -7,7 +7,7 @@ export interface TwilioWebhookEnv {
 
 export interface TwilioClient {
   messages: {
-    create: (opts: { body: string; to: string; from: string }) => Promise<any>
+    create: (opts: { body: string; to: string; from: string }) => Promise<unknown>
   }
 }
 
@@ -21,7 +21,7 @@ export interface ProcessTwilioWebhookArgs {
     authToken: string,
     signature: string,
     url: string,
-    params: Record<string, any>
+    params: Record<string, string>
   ) => boolean
 }
 
@@ -37,7 +37,7 @@ export interface ProcessTwilioWebhookResult {
 export async function processTwilioWebhook({ text, headers, url, env, twilioClient, validateRequest }: ProcessTwilioWebhookArgs): Promise<ProcessTwilioWebhookResult> {
   try {
     const body = await text()
-    const params = Object.fromEntries(new URLSearchParams(body))
+    const params: Record<string, string> = Object.fromEntries(new URLSearchParams(body))
     const twilioSignature = headers.get('x-twilio-signature')
 
     if (!twilioSignature) {
