@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateResponse } from '../webhook/twilio/openai';
+import { generateResponse } from '../../../services/openai/generateResponse';
 
 export async function POST(req: NextRequest) {
   try {

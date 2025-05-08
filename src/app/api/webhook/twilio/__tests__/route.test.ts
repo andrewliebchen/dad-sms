@@ -1,8 +1,9 @@
+jest.mock('services/openai/generateResponse', () => ({
+  generateResponse: jest.fn(),
+}));
+
 import { processTwilioWebhook, TwilioWebhookEnv, TwilioClient, ProcessTwilioWebhookArgs } from '../logic'
-import { generateResponse } from '../openai'
-jest.mock('../openai', () => ({
-  generateResponse: jest.fn(() => Promise.resolve('AI response')),
-}))
+import { generateResponse } from 'services/openai/generateResponse';
 
 const validSignature = 'valid-signature'
 const validBody = 'Body=Hello+Dad&From=%2B1234567890'
@@ -33,9 +34,20 @@ describe('Twilio Webhook Logic', () => {
   }
   const validateRequest = jest.fn<ReturnType<ProcessTwilioWebhookArgs['validateRequest']>, Parameters<ProcessTwilioWebhookArgs['validateRequest']>>()
 
-  afterEach(() => {
-    jest.resetAllMocks()
-  })
+  let generateResponseSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    jest.resetAllMocks();
+    (generateResponse as jest.Mock).mockResolvedValue('AI response');
+  });
+
+  afterAll(() => {
+    jest.resetAllMocks();
+  });
+
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
 
   it('should reject requests with missing Twilio signature', async () => {
     const req = createMockRequest({ body: validBody, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
@@ -74,7 +86,6 @@ describe('Twilio Webhook Logic', () => {
 
   it('should accept valid requests and return 200', async () => {
     validateRequest.mockReturnValue(true)
-    (generateResponse as jest.Mock).mockResolvedValue('AI response')
     const req = createMockRequest({ body: validBody, headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'x-twilio-signature': validSignature } })
     const response = await processTwilioWebhook({
       ...req,
@@ -92,7 +103,6 @@ describe('Twilio Webhook Logic', () => {
 
   it('should call the response generator (OpenAI stub)', async () => {
     validateRequest.mockReturnValue(true)
-    (generateResponse as jest.Mock).mockResolvedValue('AI response')
     const req = createMockRequest({ body: validBody, headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'x-twilio-signature': validSignature } })
     await processTwilioWebhook({
       ...req,

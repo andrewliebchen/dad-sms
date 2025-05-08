@@ -1,4 +1,4 @@
-import { generateResponse } from './openai'
+import { generateResponse } from '../../../../services/openai/generateResponse'
 
 export interface TwilioWebhookEnv {
   TWILIO_AUTH_TOKEN: string
