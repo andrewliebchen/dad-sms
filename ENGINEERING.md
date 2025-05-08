@@ -167,18 +167,26 @@ Each iteration should:
 
 ### Iteration 2: Conversation Storage (Week 1-2)
 **Goal**: Add persistent conversation storage
-- [ ] Database setup with Prisma
-  - [ ] Write tests for database models
-  - [ ] Implement schema
-  - [ ] Add migration tests
-- [ ] Conversation storage implementation
-  - [ ] Write tests for storage operations
-  - [ ] Implement storage layer
-  - [ ] Add error handling
-- [ ] Message persistence
-  - [ ] Write tests for message storage
-  - [ ] Implement message saving
-  - [ ] Add retrieval tests
+- [x] Database setup with Prisma
+  - [x] Write tests for database models
+  - [x] Implement schema
+  - [x] Add migration tests
+- [x] Conversation storage implementation
+  - [x] Write tests for storage operations
+  - [x] Implement storage layer
+  - [x] Add error handling
+- [x] Message persistence
+  - [x] Write tests for message storage
+  - [x] Implement message saving
+  - [x] Add retrieval tests
+
+**Progress Note (2024-05-09, updated 2024-05-10):**
+- Database is set up with Prisma and Postgres.
+- Schema for User, Conversation, and Message is implemented and migrated.
+- Jest tests for model creation and relations are written and passing.
+- Conversation storage and message persistence are now implemented and tested.
+- The web client now persists conversations across sessions.
+- The GET endpoint for conversations is implemented and tested.
 
 **Deployable Feature**: Persistent conversation history
 

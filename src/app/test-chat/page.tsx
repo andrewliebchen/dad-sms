@@ -1,16 +1,41 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface Message {
   from: "user" | "ai";
   text: string;
 }
 
+const TEST_PHONE = "+15555555555";
+
 export default function TestChatPage() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch messages on mount
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch(`/api/test-chat?from=${encodeURIComponent(TEST_PHONE)}`);
+        const data = await res.json();
+        if (res.ok && Array.isArray(data.messages)) {
+          setMessages(
+            data.messages.map((msg: any) => ({
+              from: msg.direction === "INCOMING" ? "user" : "ai",
+              text: msg.content,
+            }))
+          );
+        } else {
+          setError(data.error || "Failed to load messages");
+        }
+      } catch (err) {
+        setError("Network error");
+      }
+    };
+    fetchMessages();
+  }, []);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +47,7 @@ export default function TestChatPage() {
       const res = await fetch("/api/test-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ message: input, from: TEST_PHONE }),
       });
       const data = await res.json();
       if (res.ok) {

@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateResponse } from '../../../services/openai/generateResponse';
+import { getOrCreateConversationByUserId } from '../../../services/conversation';
+import { createMessage } from '../../../services/message';
+import { getOrCreateUserByPhoneNumber } from '../../../services/user';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
   try {
@@ -7,10 +13,37 @@ export async function POST(req: NextRequest) {
     if (!message) {
       return NextResponse.json({ error: 'Missing message' }, { status: 400 });
     }
-    const aiResponse = await generateResponse(message, { from: from || 'web-client' });
-    return NextResponse.json({ response: aiResponse });
+    const phoneNumber = from || 'web-client';
+    // Ensure user exists
+    const user = await getOrCreateUserByPhoneNumber(phoneNumber);
+    // Get or create a conversation for this user
+    const conversation = await getOrCreateConversationByUserId(user.id);
+    // Store the incoming message
+    await createMessage(conversation.id, message, 'INCOMING');
+    // Generate AI response
+    const aiResponse = await generateResponse(message, { from: phoneNumber });
+    // Store the AI response as a message
+    await createMessage(conversation.id, aiResponse, 'OUTGOING');
+    return NextResponse.json({ response: aiResponse, conversationId: conversation.id });
   } catch (error) {
     console.error('Error in test-chat API:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const from = searchParams.get('from') || 'web-client';
+    const user = await getOrCreateUserByPhoneNumber(from);
+    const conversation = await getOrCreateConversationByUserId(user.id);
+    const messages = await prisma.message.findMany({
+      where: { conversationId: conversation.id },
+      orderBy: { createdAt: 'asc' },
+    });
+    return NextResponse.json({ messages });
+  } catch (error) {
+    console.error('Error fetching messages:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 } 

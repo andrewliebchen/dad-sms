@@ -13,6 +13,13 @@ describe('Prisma Models', () => {
     await prisma.user.deleteMany();
   });
 
+  beforeEach(async () => {
+    // Clean up all tables before each test for isolation
+    await prisma.message.deleteMany();
+    await prisma.conversation.deleteMany();
+    await prisma.user.deleteMany();
+  });
+
   afterAll(async () => {
     await prisma.$disconnect();
   });
@@ -28,7 +35,10 @@ describe('Prisma Models', () => {
   });
 
   it('should create a Conversation linked to a User', async () => {
-    const user = await prisma.user.findFirstOrThrow();
+    // Explicitly create a user for this test
+    const user = await prisma.user.create({
+      data: { phoneNumber: '+1234567891' },
+    });
     const conversation = await prisma.conversation.create({
       data: {
         userId: user.id,
@@ -40,7 +50,16 @@ describe('Prisma Models', () => {
   });
 
   it('should create a Message linked to a Conversation', async () => {
-    const conversation = await prisma.conversation.findFirstOrThrow();
+    // Explicitly create a user and conversation for this test
+    const user = await prisma.user.create({
+      data: { phoneNumber: '+1234567892' },
+    });
+    const conversation = await prisma.conversation.create({
+      data: {
+        userId: user.id,
+        tags: ['test'],
+      },
+    });
     const message = await prisma.message.create({
       data: {
         conversationId: conversation.id,
@@ -54,7 +73,26 @@ describe('Prisma Models', () => {
   });
 
   it('should fetch related data', async () => {
-    const user = await prisma.user.findFirstOrThrow({
+    // Explicitly create user, conversation, and message for this test
+    const user = await prisma.user.create({
+      data: { phoneNumber: '+1234567893' },
+      include: { conversations: true },
+    });
+    const conversation = await prisma.conversation.create({
+      data: {
+        userId: user.id,
+        tags: ['test'],
+      },
+    });
+    await prisma.message.create({
+      data: {
+        conversationId: conversation.id,
+        content: 'Hello!',
+        direction: 'INCOMING',
+      },
+    });
+    const fetchedUser = await prisma.user.findFirstOrThrow({
+      where: { id: user.id },
       include: {
         conversations: {
           include: {
@@ -63,8 +101,8 @@ describe('Prisma Models', () => {
         },
       },
     });
-    expect(user.conversations.length).toBeGreaterThan(0);
-    const conv = user.conversations[0];
+    expect(fetchedUser.conversations.length).toBeGreaterThan(0);
+    const conv = fetchedUser.conversations[0];
     expect(conv.messages.length).toBeGreaterThan(0);
   });
 }); 
