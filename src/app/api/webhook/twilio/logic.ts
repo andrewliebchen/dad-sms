@@ -1,4 +1,7 @@
 import { generateResponse } from '../../../../services/openai/generateResponse'
+import { getOrCreateUserByPhoneNumber } from '../../../../services/user'
+import { getOrCreateConversationByUserId } from '../../../../services/conversation'
+import { createMessage, getRecentMessages } from '../../../../services/message'
 
 export interface TwilioWebhookEnv {
   TWILIO_AUTH_TOKEN: string
@@ -62,7 +65,21 @@ export async function processTwilioWebhook({ text, headers, url, env, twilioClie
       return { status: 400, body: 'Missing required parameters' }
     }
 
-    const response = await generateResponse(messageBody, { from: fromNumber })
+    // Find or create user
+    const user = await getOrCreateUserByPhoneNumber(fromNumber)
+    // Find or create conversation
+    const conversation = await getOrCreateConversationByUserId(user.id)
+    // Store incoming message
+    await createMessage(conversation.id, messageBody, 'INCOMING')
+
+    // Generate response with context
+    const response = await generateResponse(messageBody, { from: fromNumber, conversationId: conversation.id })
+    // Store outgoing message
+    await createMessage(conversation.id, response, 'OUTGOING')
+
+    // After storing outgoing message, handle buffer/journal logic
+    const { handleMessageBufferAndJournal } = await import('../../../../services/conversation');
+    await handleMessageBufferAndJournal(conversation.id);
 
     await twilioClient.messages.create({
       body: response,

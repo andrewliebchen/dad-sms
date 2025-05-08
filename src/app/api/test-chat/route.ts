@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateResponse } from '../../../services/openai/generateResponse';
-import { getOrCreateConversationByUserId } from '../../../services/conversation';
+import { getOrCreateConversationByUserId, getRecentJournalEntries } from '../../../services/conversation';
 import { createMessage } from '../../../services/message';
 import { getOrCreateUserByPhoneNumber } from '../../../services/user';
 import { PrismaClient } from '@prisma/client';
@@ -24,6 +24,9 @@ export async function POST(req: NextRequest) {
     const aiResponse = await generateResponse(message, { from: phoneNumber });
     // Store the AI response as a message
     await createMessage(conversation.id, aiResponse, 'OUTGOING');
+    // Handle buffer/journal logic
+    const { handleMessageBufferAndJournal } = await import('../../../services/conversation');
+    await handleMessageBufferAndJournal(conversation.id);
     return NextResponse.json({ response: aiResponse, conversationId: conversation.id });
   } catch (error) {
     console.error('Error in test-chat API:', error);
@@ -41,7 +44,8 @@ export async function GET(req: NextRequest) {
       where: { conversationId: conversation.id },
       orderBy: { createdAt: 'asc' },
     });
-    return NextResponse.json({ messages });
+    const journalEntries = await getRecentJournalEntries(conversation.id, 5);
+    return NextResponse.json({ messages, journalEntries });
   } catch (error) {
     console.error('Error fetching messages:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

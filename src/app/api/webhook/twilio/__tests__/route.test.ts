@@ -1,5 +1,22 @@
+/**
+ * @jest-environment node
+ */
+
 jest.mock('services/openai/generateResponse', () => ({
   generateResponse: jest.fn(),
+}));
+
+jest.mock('services/user', () => ({
+  getOrCreateUserByPhoneNumber: jest.fn(() => Promise.resolve({ id: 'test-user-id' })),
+}));
+jest.mock('services/conversation', () => ({
+  getOrCreateConversationByUserId: jest.fn(() => Promise.resolve({ id: 'test-conv-id' })),
+  getRecentJournalEntries: jest.fn(() => Promise.resolve([])),
+  createJournalEntry: jest.fn(() => Promise.resolve()),
+}));
+jest.mock('services/message', () => ({
+  createMessage: jest.fn(() => Promise.resolve()),
+  getRecentMessages: jest.fn(() => Promise.resolve([])),
 }));
 
 import { processTwilioWebhook, TwilioWebhookEnv, TwilioClient, ProcessTwilioWebhookArgs } from '../logic'

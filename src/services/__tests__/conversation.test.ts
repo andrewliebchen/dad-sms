@@ -11,6 +11,7 @@ describe('Conversation Storage Service', () => {
 
   beforeEach(async () => {
     // Clean up test users before each test to avoid unique constraint errors
+    await prisma.journalEntry.deleteMany();
     await prisma.message.deleteMany();
     await prisma.conversation.deleteMany();
     await prisma.user.deleteMany({ where: { phoneNumber: { in: ['+15555555555', '+16666666666'] } } });
@@ -22,6 +23,7 @@ describe('Conversation Storage Service', () => {
 
   afterAll(async () => {
     // Clean up
+    await prisma.journalEntry.deleteMany();
     await prisma.message.deleteMany();
     await prisma.conversation.deleteMany();
     await prisma.user.deleteMany();

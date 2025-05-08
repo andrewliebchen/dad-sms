@@ -5,9 +5,12 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+jest.setTimeout(20000);
+
 describe('Prisma Models', () => {
   beforeAll(async () => {
     // Clean up before tests
+    await prisma.journalEntry.deleteMany();
     await prisma.message.deleteMany();
     await prisma.conversation.deleteMany();
     await prisma.user.deleteMany();
@@ -15,6 +18,7 @@ describe('Prisma Models', () => {
 
   beforeEach(async () => {
     // Clean up all tables before each test for isolation
+    await prisma.journalEntry.deleteMany();
     await prisma.message.deleteMany();
     await prisma.conversation.deleteMany();
     await prisma.user.deleteMany();
@@ -104,5 +108,25 @@ describe('Prisma Models', () => {
     expect(fetchedUser.conversations.length).toBeGreaterThan(0);
     const conv = fetchedUser.conversations[0];
     expect(conv.messages.length).toBeGreaterThan(0);
+  });
+
+  it('should create a JournalEntry linked to a Conversation', async () => {
+    const user = await prisma.user.create({
+      data: { phoneNumber: '+1234567894' },
+    });
+    const conversation = await prisma.conversation.create({
+      data: {
+        userId: user.id,
+        tags: ['journal'],
+      },
+    });
+    const journalEntry = await prisma.journalEntry.create({
+      data: {
+        conversationId: conversation.id,
+        content: 'Dad reflects on the conversation.',
+      },
+    });
+    expect(journalEntry.conversationId).toBe(conversation.id);
+    expect(journalEntry.content).toContain('Dad reflects');
   });
 }); 

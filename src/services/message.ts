@@ -12,4 +12,12 @@ export async function createMessage(conversationId: string, content: string, dir
       direction,
     },
   });
+}
+
+export async function getRecentMessages(conversationId: string, limit: number = 10) {
+  return prisma.message.findMany({
+    where: { conversationId },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+  });
 } 

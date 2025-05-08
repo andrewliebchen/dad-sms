@@ -56,4 +56,39 @@ export async function getOrCreateConversationByUserId(userId: string, tags?: str
     conversation = await createConversation(userId, tags);
   }
   return conversation;
+}
+
+export async function getRecentJournalEntries(conversationId: string, limit: number = 3) {
+  return prisma.journalEntry.findMany({
+    where: { conversationId },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+  });
+}
+
+export async function createJournalEntry(conversationId: string, content: string) {
+  return prisma.journalEntry.create({
+    data: {
+      conversationId,
+      content,
+    },
+  });
+}
+
+export async function handleMessageBufferAndJournal(conversationId: string): Promise<void> {
+  // Buffer threshold: 4 messages (2 user, 2 dad)
+  const { getRecentMessages } = await import('./message');
+  const recentMessages: any[] = await getRecentMessages(conversationId, 4);
+  const userCount = recentMessages.filter((m: any) => m.direction === 'INCOMING').length;
+  const dadCount = recentMessages.filter((m: any) => m.direction === 'OUTGOING').length;
+  console.log('[Journal Buffer Check]', { recentMessages, userCount, dadCount });
+  if (recentMessages.length === 4 && userCount >= 2 && dadCount >= 2) {
+    console.log('[Journal Triggered]', { recentMessages, userCount, dadCount });
+    const lastJournal = await getRecentJournalEntries(conversationId, 1);
+    const lastJournalContent = lastJournal[0]?.content;
+    const { generateJournalEntry } = await import('../services/openai/generateResponse');
+    const journalText = await generateJournalEntry(recentMessages.reverse(), lastJournalContent);
+    const result = await createJournalEntry(conversationId, journalText);
+    console.log('[Journal Created]', result);
+  }
 } 

@@ -25,6 +25,7 @@ model Conversation {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   tags      String[]
+  journalEntries JournalEntry[]
 }
 
 model Message {
@@ -35,6 +36,14 @@ model Message {
   direction      Direction
   createdAt      DateTime     @default(now())
   metadata       Json?
+}
+
+model JournalEntry {
+  id             String        @id @default(cuid())
+  conversationId String
+  conversation   Conversation  @relation(fields: [conversationId], references: [id])
+  content        String
+  createdAt      DateTime      @default(now())
 }
 
 enum Direction {
