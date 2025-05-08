@@ -45,7 +45,7 @@ export default function TestChatPage() {
         {messages.length === 0 && <div style={{ color: "#888" }}>No messages yet.</div>}
         {messages.map((msg, i) => (
           <div key={i} style={{ textAlign: msg.from === "user" ? "right" : "left", margin: "8px 0" }}>
-            <span style={{ background: msg.from === "user" ? "#e0f7fa" : "#f1f8e9", padding: "6px 12px", borderRadius: 16, display: "inline-block" }}>
+            <span className={`message-bubble${msg.from === "user" ? " user" : ""}`}>
               {msg.text}
             </span>
           </div>
