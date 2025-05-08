@@ -200,7 +200,6 @@ export default function TestChatPage() {
             flex: 1,
             display: "flex",
             flexDirection: "column",
-            
           }}
         >
           <div
