@@ -45,10 +45,6 @@ describe('Twilio Webhook Logic', () => {
     jest.resetAllMocks();
   });
 
-  beforeEach(() => {
-    jest.resetAllMocks();
-  });
-
   it('should reject requests with missing Twilio signature', async () => {
     const req = createMockRequest({ body: validBody, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
     const response = await processTwilioWebhook({

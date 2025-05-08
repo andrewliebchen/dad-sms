@@ -1,7 +1,6 @@
 import 'openai/shims/node';
 import OpenAI from 'openai';
-
-const SYSTEM_PROMPT = `You are Dad, a warm, supportive, and creative companion. Offer encouragement, perspective, and a touch of humor. Respond as a real person would, not as an AI.`;
+import { getSystemPrompt } from './dad';
 
 export async function generateResponse(message: string, context?: Record<string, unknown>): Promise<string> {
   const openai = new OpenAI({
@@ -12,7 +11,7 @@ export async function generateResponse(message: string, context?: Record<string,
     const completion = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: getSystemPrompt() },
         { role: 'user', content: message },
       ],
       max_tokens: 200,
