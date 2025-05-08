@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Stub for OpenAI response generation. Replace with real implementation.
  */

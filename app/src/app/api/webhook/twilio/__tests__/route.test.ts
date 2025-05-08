@@ -1,4 +1,5 @@
 import { processTwilioWebhook, TwilioWebhookEnv, TwilioClient, ProcessTwilioWebhookArgs } from '../logic'
+import { generateResponse } from '../openai'
 jest.mock('../openai', () => ({
   generateResponse: jest.fn(() => Promise.resolve('AI response')),
 }))
@@ -73,8 +74,7 @@ describe('Twilio Webhook Logic', () => {
 
   it('should accept valid requests and return 200', async () => {
     validateRequest.mockReturnValue(true)
-    const { generateResponse } = require('../openai')
-    ;(generateResponse as jest.Mock).mockResolvedValue('AI response')
+    (generateResponse as jest.Mock).mockResolvedValue('AI response')
     const req = createMockRequest({ body: validBody, headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'x-twilio-signature': validSignature } })
     const response = await processTwilioWebhook({
       ...req,
@@ -92,8 +92,7 @@ describe('Twilio Webhook Logic', () => {
 
   it('should call the response generator (OpenAI stub)', async () => {
     validateRequest.mockReturnValue(true)
-    const { generateResponse } = require('../openai')
-    ;(generateResponse as jest.Mock).mockResolvedValue('AI response')
+    (generateResponse as jest.Mock).mockResolvedValue('AI response')
     const req = createMockRequest({ body: validBody, headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'x-twilio-signature': validSignature } })
     await processTwilioWebhook({
       ...req,
