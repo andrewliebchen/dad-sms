@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateResponse } from '@/services/openai/generateResponse';
-import { getOrCreateConversationByUserId, getRecentJournalEntries } from '@/services/conversation';
+import { getOrCreateConversationByUserId } from '@/services/conversation';
+import { getRecentJournalEntries } from '@/services/journal';
 import { createMessage } from '@/services/message';
 import { getOrCreateUserByPhoneNumber } from '@/services/user';
 import { PrismaClient } from '@prisma/client';
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
     // Store the AI response as a message
     await createMessage(conversation.id, aiResponse, 'OUTGOING');
     // Handle buffer/journal logic
-    const { handleMessageBufferAndJournal } = await import('@/services/conversation');
+    const { handleMessageBufferAndJournal } = await import('@/services/journal');
     await handleMessageBufferAndJournal(conversation.id);
     return NextResponse.json({ response: aiResponse, conversationId: conversation.id });
   } catch (error) {
