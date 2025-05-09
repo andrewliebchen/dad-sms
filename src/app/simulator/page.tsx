@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 interface Message {
   from: "user" | "ai";
@@ -30,6 +30,11 @@ interface JournalEntry {
   createdAt: string;
 }
 
+interface User {
+  id: string;
+  phoneNumber: string;
+}
+
 const TEST_PHONE = "+1555555555";
 
 export default function SimulatorPage() {
@@ -39,12 +44,33 @@ export default function SimulatorPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [selectedUser, setSelectedUser] = useState<string>("");
+  const chatRef = useRef<HTMLDivElement>(null);
 
-  // Fetch messages and journal entries on mount
+  // Fetch users on mount
   useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch("/api/simulator?users=1");
+        const data = await res.json();
+        if (res.ok && Array.isArray(data.users)) {
+          setUsers(data.users);
+          // Default to TEST_PHONE if present, else first user
+          const defaultUser = data.users.find((u: User) => u.phoneNumber === "+1555555555") || data.users[0];
+          if (defaultUser) setSelectedUser(defaultUser.phoneNumber);
+        }
+      } catch {}
+    };
+    fetchUsers();
+  }, []);
+
+  // Fetch messages/journal when selectedUser changes
+  useEffect(() => {
+    if (!selectedUser) return;
     const fetchMessages = async () => {
       try {
-        const res = await fetch(`/api/simulator?from=${encodeURIComponent(TEST_PHONE)}`);
+        const res = await fetch(`/api/simulator?from=${encodeURIComponent(selectedUser)}`);
         const data = await res.json();
         if (res.ok && Array.isArray(data.messages)) {
           setMessages(
@@ -69,11 +95,18 @@ export default function SimulatorPage() {
       }
     };
     fetchMessages();
-  }, []);
+  }, [selectedUser]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || !selectedUser) return;
     setMessages((msgs) => [...msgs, { from: "user", text: input }]);
     setLoading(true);
     setError(null);
@@ -81,7 +114,7 @@ export default function SimulatorPage() {
       const res = await fetch("/api/simulator", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input, from: TEST_PHONE }),
+        body: JSON.stringify({ message: input, from: selectedUser }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -132,149 +165,162 @@ export default function SimulatorPage() {
         flexDirection: "row",
       }}
     >
-        {/* Chat Panel */}
+      {/* Chat Panel */}
+      <div
+        style={{
+          flex: 1,
+          background: "#fff",            
+          display: "flex",
+          flexDirection: "column",
+          minWidth: 0,
+        }}
+      >
+        {/* User Switcher */}
+      <div style={{ padding: 12, borderBottom: '1px solid #e3e7ee' }}>
+        <select
+          id="user-select"
+          value={selectedUser}
+          onChange={e => setSelectedUser(e.target.value)}
+          style={{ padding: '6px 12px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 15 }}
+        >
+          {users.map(u => (
+            <option key={u.id} value={u.phoneNumber}>{u.phoneNumber}</option>
+          ))}
+        </select>
+      </div>
         <div
+          ref={chatRef}
           style={{
             flex: 1,
-            background: "#fff",            
-            display: "flex",
-            flexDirection: "column",
-            minWidth: 0,
+            overflowY: "auto",
+            overflowX: "hidden",
+            padding: 12,
           }}
         >
-          <div
-            style={{
-              flex: 1,
-              overflowY: "auto",
-              overflowX: "hidden",
-              padding: 12,
-            }}
-          >
-            {messages.length === 0 && <div style={{ color: "#888", padding: 16 }}>No messages yet.</div>}
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                style={{
-                  margin: "12px 0",
-                  display: "flex",
-                  justifyContent: msg.from === "user" ? "flex-end" : "flex-start",
-                }}
-              >
-                <span
-                  style={{
-                    display: "inline-block",
-                    background: msg.from === "user" ? "#dbeafe" : "#e7f6e7",
-                    color: "#222",
-                    borderRadius: 16,
-                    padding: "10px 18px",
-                    maxWidth: 320,
-                    fontSize: 16,
-                    boxShadow: msg.from === "user"
-                      ? "0 1px 4px rgba(59,130,246,0.08)"
-                      : "0 1px 4px rgba(34,197,94,0.08)",
-                  }}
-                >
-                  {msg.text}
-                </span>
-              </div>
-            ))}
-          </div>
-          <form onSubmit={sendMessage} style={{ display: "flex", gap: 8, padding: 12, borderTop: "1px solid #e3e7ee" }}>
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
+          {messages.length === 0 && <div style={{ color: "#888", padding: 16 }}>No messages yet.</div>}
+          {messages.map((msg, i) => (
+            <div
+              key={i}
               style={{
-                flex: 1,
-                padding: 12,
-                borderRadius: 6,
-                border: "1px solid #cbd5e1",
-                fontSize: 16,
-                background: "#f8fafc",
-              }}
-              disabled={loading}
-            />
-            <button
-              type="submit"
-              disabled={loading || !input.trim()}
-              style={{
-                padding: "0 24px",
-                fontSize: 16,
-                borderRadius: 6,
-                background: "#2563eb",
-                color: "#fff",
-                border: "none",
-                fontWeight: 600,
-                cursor: loading || !input.trim() ? "not-allowed" : "pointer",
-                opacity: loading || !input.trim() ? 0.7 : 1,
-                transition: "opacity 0.2s",
+                margin: "12px 0",
+                display: "flex",
+                justifyContent: msg.from === "user" ? "flex-end" : "flex-start",
               }}
             >
-              {loading ? "..." : "Send"}
-            </button>
-          </form>
-          {error && <div style={{ color: "red", marginTop: 8 }}>{error}</div>}
+              <span
+                style={{
+                  display: "inline-block",
+                  background: msg.from === "user" ? "#dbeafe" : "#e7f6e7",
+                  color: "#222",
+                  borderRadius: 16,
+                  padding: "10px 18px",
+                  maxWidth: 320,
+                  fontSize: 16,
+                  boxShadow: msg.from === "user"
+                    ? "0 1px 4px rgba(59,130,246,0.08)"
+                    : "0 1px 4px rgba(34,197,94,0.08)",
+                }}
+              >
+                {msg.text}
+              </span>
+            </div>
+          ))}
         </div>
-        {/* Journal Panel */}
+        <form onSubmit={sendMessage} style={{ display: "flex", gap: 8, padding: 12, borderTop: "1px solid #e3e7ee" }}>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your message..."
+            style={{
+              flex: 1,
+              padding: 12,
+              borderRadius: 6,
+              border: "1px solid #cbd5e1",
+              fontSize: 16,
+              background: "#f8fafc",
+            }}
+            disabled={loading}
+          />
+          <button
+            type="submit"
+            disabled={loading || !input.trim()}
+            style={{
+              padding: "0 24px",
+              fontSize: 16,
+              borderRadius: 6,
+              background: "#2563eb",
+              color: "#fff",
+              border: "none",
+              fontWeight: 600,
+              cursor: loading || !input.trim() ? "not-allowed" : "pointer",
+              opacity: loading || !input.trim() ? 0.7 : 1,
+              transition: "opacity 0.2s",
+            }}
+          >
+            {loading ? "..." : "Send"}
+          </button>
+        </form>
+        {error && <div style={{ color: "red", marginTop: 8 }}>{error}</div>}
+      </div>
+      {/* Journal Panel */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <div
           style={{
             flex: 1,
-            display: "flex",
-            flexDirection: "column",
+            overflowY: "auto",
+            background: "#f8fafc",
+            borderLeft: "1px solid #e3e7ee",
+            padding: 12,
           }}
         >
-          <div
-            style={{
-              flex: 1,
-              overflowY: "auto",
-              background: "#f8fafc",
-              borderLeft: "1px solid #e3e7ee",
-              padding: 12,
-            }}
-          >
-            {journalEntries.length === 0 && <div style={{ color: "#888", padding: 16 }}>No journal entries yet.</div>}
-            {journalEntries.map((entry) => (
-              <div
-                key={entry.id}
-                style={{
-                  background: "#fff",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: 8,
-                  padding: 16,
-                  marginBottom: 16,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
-                  position: 'relative',
-                }}
-              >
-                <div style={{ fontSize: 13, color: "#64748b", marginBottom: 6 }}>
-                  {new Date(entry.createdAt).toLocaleString()}
-                </div>
-                <div style={{ whiteSpace: "pre-line", fontSize: 16, color: "#222" }}>{entry.content}</div>
-                <button
-                  onClick={() => handleDeleteJournalEntry(entry.id)}
-                  disabled={deletingId === entry.id}
-                  style={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    background: 'rgba(0,0,0,0.05)',
-                    border: 'none',
-                    borderRadius: 4,
-                    padding: '2px 10px',
-                    fontSize: 13,
-                    cursor: deletingId === entry.id ? 'not-allowed' : 'pointer',
-                    opacity: deletingId === entry.id ? 0.6 : 1,
-                    transition: 'opacity 0.2s',
-                  }}
-                  title="Delete journal entry"
-                >
-                  {deletingId === entry.id ? '...' : '🗑️'}
-                </button>
+          {journalEntries.length === 0 && <div style={{ color: "#888", padding: 16 }}>No journal entries yet.</div>}
+          {journalEntries.map((entry) => (
+            <div
+              key={entry.id}
+              style={{
+                background: "#fff",
+                border: "1px solid #e5e7eb",
+                borderRadius: 8,
+                padding: 16,
+                marginBottom: 16,
+                boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
+                position: 'relative',
+              }}
+            >
+              <div style={{ fontSize: 13, color: "#64748b", marginBottom: 6 }}>
+                {new Date(entry.createdAt).toLocaleString()}
               </div>
-            ))}
-          </div>
-        
+              <div style={{ whiteSpace: "pre-line", fontSize: 16, color: "#222" }}>{entry.content}</div>
+              <button
+                onClick={() => handleDeleteJournalEntry(entry.id)}
+                disabled={deletingId === entry.id}
+                style={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  background: 'rgba(0,0,0,0.05)',
+                  border: 'none',
+                  borderRadius: 4,
+                  padding: '2px 10px',
+                  fontSize: 13,
+                  cursor: deletingId === entry.id ? 'not-allowed' : 'pointer',
+                  opacity: deletingId === entry.id ? 0.6 : 1,
+                  transition: 'opacity 0.2s',
+                }}
+                title="Delete journal entry"
+              >
+                {deletingId === entry.id ? '...' : '🗑️'}
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
       {/* Responsive: stack vertically on small screens */}
       <style>{`

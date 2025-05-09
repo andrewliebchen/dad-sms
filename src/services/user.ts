@@ -8,4 +8,11 @@ export async function getOrCreateUserByPhoneNumber(phoneNumber: string) {
     user = await prisma.user.create({ data: { phoneNumber } });
   }
   return user;
+}
+
+export async function getAllUsers() {
+  return prisma.user.findMany({
+    select: { id: true, phoneNumber: true },
+    orderBy: { phoneNumber: 'asc' },
+  });
 } 

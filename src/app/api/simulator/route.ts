@@ -3,7 +3,7 @@ import { generateResponse } from '@/services/openai/generateResponse';
 import { getOrCreateConversationByUserId } from '@/services/conversation';
 import { getRecentJournalEntries } from '@/services/journal';
 import { createMessage } from '@/services/message';
-import { getOrCreateUserByPhoneNumber } from '@/services/user';
+import { getOrCreateUserByPhoneNumber, getAllUsers } from '@/services/user';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -38,6 +38,10 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
+    if (searchParams.get('users')) {
+      const users = await getAllUsers();
+      return NextResponse.json({ users });
+    }
     const from = searchParams.get('from') || 'web-client';
     const user = await getOrCreateUserByPhoneNumber(from);
     const conversation = await getOrCreateConversationByUserId(user.id);
