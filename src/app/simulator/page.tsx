@@ -132,7 +132,6 @@ export default function SimulatorPage() {
               <div
                 key={i}
                 style={{
-                  textAlign: msg.from === "user" ? "right" : "left",
                   margin: "12px 0",
                   display: "flex",
                   justifyContent: msg.from === "user" ? "flex-end" : "flex-start",

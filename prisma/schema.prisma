@@ -36,6 +36,7 @@ model Message {
   direction      Direction
   createdAt      DateTime     @default(now())
   metadata       Json?
+  journaled      Boolean      @default(false)
 }
 
 model JournalEntry {

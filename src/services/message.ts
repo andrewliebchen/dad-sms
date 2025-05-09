@@ -14,9 +14,12 @@ export async function createMessage(conversationId: string, content: string, dir
   });
 }
 
-export async function getRecentMessages(conversationId: string, limit: number = 10) {
+export async function getRecentMessages(conversationId: string, limit: number = 10, unjournaledOnly: boolean = false) {
   return prisma.message.findMany({
-    where: { conversationId },
+    where: {
+      conversationId,
+      ...(unjournaledOnly ? { journaled: false } : {}),
+    },
     orderBy: { createdAt: 'desc' },
     take: limit,
   });

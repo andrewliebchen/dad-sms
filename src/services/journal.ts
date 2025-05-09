@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 import OpenAI from 'openai';
+import { getSystemPrompt } from './openai/dad';
 
 // Types
 export interface JournalEntry {
@@ -35,7 +36,7 @@ export async function generateJournalEntry(messages: { content: string; directio
     apiKey: process.env.OPENAI_API_KEY,
     dangerouslyAllowBrowser: process.env.NODE_ENV === 'test',
   });
-  let prompt = `You are Dad, keeping a private journal about your ongoing SMS relationship with your son. Reflect on the last 10 messages (5 from you, 5 from your son). Consider what he has told you, what it means for your relationship, and how you feel about it. Write a short, thoughtful journal entry in your own words.`;
+  let prompt = `You are Dad, keeping a private journal about your ongoing SMS relationship with your son. Reflect on the last 10 messages (5 from you, 5 from your son). Consider what he has told you, what it means for your relationship, and how you feel about it.\n\nWrite a single, concise paragraph (no more than 4 sentences) capturing your most important thoughts, observations, and plans about your relationship with your son. Do NOT include a date or greeting. Focus on what matters most to you as Dad in this moment.`;
   if (lastJournalEntry) {
     prompt += `\n\nYour previous journal entry was:\n\"\"\"${lastJournalEntry}\"\"\"\n\nBuild on your previous reflections if relevant.`;
   }
@@ -48,7 +49,7 @@ export async function generateJournalEntry(messages: { content: string; directio
   const completion = await openai.chat.completions.create({
     model: 'gpt-4',
     messages: [
-      { role: 'system', content: 'You are Dad, writing a private journal about your relationship with your son.' },
+      { role: 'system', content: getSystemPrompt() },
       { role: 'user', content: prompt },
     ],
     max_tokens: 250,
@@ -59,15 +60,22 @@ export async function generateJournalEntry(messages: { content: string; directio
 
 // Buffer/trigger logic for journal entry creation
 export async function handleMessageBufferAndJournal(conversationId: string): Promise<void> {
-  // Buffer threshold: 4 messages (2 user, 2 dad)
+  // Buffer threshold: 6 messages (3 user, 3 dad)
   const { getRecentMessages } = await import('./message');
-  const recentMessages: any[] = await getRecentMessages(conversationId, 4);
+  const recentMessages: any[] = await getRecentMessages(conversationId, 6, true); // Only unjournaled
   const userCount = recentMessages.filter((m: any) => m.direction === 'INCOMING').length;
   const dadCount = recentMessages.filter((m: any) => m.direction === 'OUTGOING').length;
-  if (recentMessages.length === 4 && userCount >= 2 && dadCount >= 2) {
+  if (recentMessages.length === 6 && userCount >= 3 && dadCount >= 3) {
     const lastJournal = await getRecentJournalEntries(conversationId, 1);
     const lastJournalContent = lastJournal[0]?.content;
-    const journalText = await generateJournalEntry(recentMessages.reverse(), lastJournalContent);
+    const journalText = await generateJournalEntry([...recentMessages].reverse(), lastJournalContent);
     await createJournalEntry(conversationId, journalText);
+    // Mark these messages as journaled
+    const { PrismaClient } = await import('@prisma/client');
+    const prisma = new PrismaClient();
+    await prisma.message.updateMany({
+      where: { id: { in: recentMessages.map((m: any) => m.id) } },
+      data: { journaled: true },
+    });
   }
 } 
