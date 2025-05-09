@@ -38,6 +38,7 @@ export default function SimulatorPage() {
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Fetch messages and journal entries on mount
   useEffect(() => {
@@ -93,6 +94,28 @@ export default function SimulatorPage() {
     } finally {
       setLoading(false);
       setInput("");
+    }
+  };
+
+  const handleDeleteJournalEntry = async (id: string) => {
+    setDeletingId(id);
+    setError(null);
+    try {
+      const res = await fetch('/api/journal', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setJournalEntries((entries) => entries.filter((entry) => entry.id !== id));
+      } else {
+        setError(data.error || 'Failed to delete journal entry');
+      }
+    } catch {
+      setError('Network error');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -221,12 +244,33 @@ export default function SimulatorPage() {
                   padding: 16,
                   marginBottom: 16,
                   boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
+                  position: 'relative',
                 }}
               >
                 <div style={{ fontSize: 13, color: "#64748b", marginBottom: 6 }}>
                   {new Date(entry.createdAt).toLocaleString()}
                 </div>
                 <div style={{ whiteSpace: "pre-line", fontSize: 16, color: "#222" }}>{entry.content}</div>
+                <button
+                  onClick={() => handleDeleteJournalEntry(entry.id)}
+                  disabled={deletingId === entry.id}
+                  style={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    background: 'rgba(0,0,0,0.05)',
+                    border: 'none',
+                    borderRadius: 4,
+                    padding: '2px 10px',
+                    fontSize: 13,
+                    cursor: deletingId === entry.id ? 'not-allowed' : 'pointer',
+                    opacity: deletingId === entry.id ? 0.6 : 1,
+                    transition: 'opacity 0.2s',
+                  }}
+                  title="Delete journal entry"
+                >
+                  {deletingId === entry.id ? '...' : '🗑️'}
+                </button>
               </div>
             ))}
           </div>

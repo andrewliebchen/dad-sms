@@ -78,4 +78,11 @@ export async function handleMessageBufferAndJournal(conversationId: string): Pro
       data: { journaled: true },
     });
   }
+}
+
+// Delete a journal entry by ID
+export async function deleteJournalEntry(journalEntryId: string) {
+  return prisma.journalEntry.delete({
+    where: { id: journalEntryId },
+  });
 } 
