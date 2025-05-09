@@ -13,10 +13,24 @@ export async function generateResponse(message: string, context?: { from?: strin
     let messages: OpenAI.ChatCompletionMessageParam[] = [
       { role: 'system', content: getSystemPrompt() },
     ];
+    console.log('generateResponse: context', context);
     if (context?.conversationId) {
-      // Fetch last 10 messages (buffer)
+      console.log('generateResponse: using conversationId', context.conversationId);
+      // Fetch last 10 journal entries
+      const journalEntries = await getRecentJournalEntries(context.conversationId, 10);
+      console.log('generateResponse: fetched journal entries', journalEntries);
+      if (journalEntries.length > 0) {
+        messages.push({
+          role: 'system',
+          content: `--- Dad's Journal Entries (Memory) ---\nThese are Dad's private reflections and memories about his relationship with his son. Use them to inform Dad's responses, personality, and emotional continuity.\n\n${journalEntries
+            .reverse()
+            .map((entry: any, i: number) => `Entry ${i + 1}: ${entry.content}`)
+            .join('\n\n')}`,
+        } as OpenAI.ChatCompletionMessageParam);
+      }
+      // Fetch last 10 messages (chronological order)
       const recentMessages = await getRecentMessages(context.conversationId, 10);
-      // Add to prompt in chronological order
+      console.log('generateResponse: fetched recent messages', recentMessages);
       messages = messages.concat(
         recentMessages
           .reverse()
@@ -25,19 +39,9 @@ export async function generateResponse(message: string, context?: { from?: strin
             content: msg.content,
           }) as OpenAI.ChatCompletionMessageParam)
       );
-      // Fetch last 3 journal entries
-      const journalEntries = await getRecentJournalEntries(context.conversationId, 3);
-      if (journalEntries.length > 0) {
-        messages.push({
-          role: 'system',
-          content: `Dad's Journal Entries:\n${journalEntries
-            .reverse()
-            .map((entry: any, i: number) => `Entry ${i + 1}: ${entry.content}`)
-            .join('\n\n')}`,
-        } as OpenAI.ChatCompletionMessageParam);
-      }
     }
     messages.push({ role: 'user', content: message } as OpenAI.ChatCompletionMessageParam);
+    console.log('OpenAI prompt messages:', JSON.stringify(messages, null, 2));
     const completion = await openai.chat.completions.create({
       model: 'gpt-4',
       messages,

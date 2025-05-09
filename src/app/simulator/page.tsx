@@ -65,36 +65,38 @@ export default function SimulatorPage() {
     fetchUsers();
   }, []);
 
+  // Extracted fetch logic for messages and journal entries
+  const fetchMessagesAndJournal = async (user: string) => {
+    try {
+      const res = await fetch(`/api/simulator?from=${encodeURIComponent(user)}`);
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.messages)) {
+        setMessages(
+          data.messages.map((msg: unknown) => {
+            if (isApiMessage(msg)) {
+              return {
+                from: msg.direction === 'INCOMING' ? 'user' : 'ai',
+                text: msg.content,
+              };
+            }
+            return { from: 'ai', text: '' };
+          })
+        );
+        if (Array.isArray(data.journalEntries)) {
+          setJournalEntries(data.journalEntries);
+        }
+      } else {
+        setError(data.error || "Failed to load messages");
+      }
+    } catch {
+      setError("Network error");
+    }
+  };
+
   // Fetch messages/journal when selectedUser changes
   useEffect(() => {
     if (!selectedUser) return;
-    const fetchMessages = async () => {
-      try {
-        const res = await fetch(`/api/simulator?from=${encodeURIComponent(selectedUser)}`);
-        const data = await res.json();
-        if (res.ok && Array.isArray(data.messages)) {
-          setMessages(
-            data.messages.map((msg: unknown) => {
-              if (isApiMessage(msg)) {
-                return {
-                  from: msg.direction === 'INCOMING' ? 'user' : 'ai',
-                  text: msg.content,
-                };
-              }
-              return { from: 'ai', text: '' };
-            })
-          );
-          if (Array.isArray(data.journalEntries)) {
-            setJournalEntries(data.journalEntries);
-          }
-        } else {
-          setError(data.error || "Failed to load messages");
-        }
-      } catch {
-        setError("Network error");
-      }
-    };
-    fetchMessages();
+    fetchMessagesAndJournal(selectedUser);
   }, [selectedUser]);
 
   // Auto-scroll to bottom when messages change
@@ -119,6 +121,8 @@ export default function SimulatorPage() {
       const data = await res.json();
       if (res.ok) {
         setMessages((msgs) => [...msgs, { from: "ai", text: data.response }]);
+        // Re-fetch messages and journal entries after sending a message
+        await fetchMessagesAndJournal(selectedUser);
       } else {
         setError(data.error || "Unknown error");
       }

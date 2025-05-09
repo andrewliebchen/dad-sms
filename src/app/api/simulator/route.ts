@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     // Store the incoming message
     await createMessage(conversation.id, message, 'INCOMING');
     // Generate AI response
-    const aiResponse = await generateResponse(message, { from: phoneNumber });
+    const aiResponse = await generateResponse(message, { from: phoneNumber, conversationId: conversation.id });
     // Store the AI response as a message
     await createMessage(conversation.id, aiResponse, 'OUTGOING');
     // Handle buffer/journal logic
