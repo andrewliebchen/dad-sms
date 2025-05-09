@@ -133,8 +133,8 @@ Each iteration should:
 - Twilio webhook endpoint implemented as an API route
 - All business logic extracted to a pure function (`processTwilioWebhook`) for testability
 - OpenAI integration stubbed for now
-- **Simple web client (test chat UI) added at `/test-chat` for local AI response testing, bypassing Twilio.**
-- **UI for `/test-chat` has been upgraded to a modern, polished, and responsive layout:**
+- **Simple web client (simulator UI) added at `/simulator` for local AI response testing, bypassing Twilio.**
+- **UI for `/simulator` has been upgraded to a modern, polished, and responsive layout:**
   - Chat and Journal are now displayed in distinct, card-like panels side-by-side on desktop, stacked on mobile.
   - Both panels feature scrollable content areas, improved spacing, and clear visual hierarchy.
   - The design is much more user-friendly and visually appealing, with a clean background and subtle dividers.
@@ -252,8 +252,8 @@ Each iteration should:
 - External service integration
 
 ### Manual/Local Testing
-- **Simple web client at `/test-chat` allows developers to interact with the AI logic directly, without Twilio, for rapid iteration and debugging.**
-- **The `/test-chat` UI now provides a modern, side-by-side chat and journal experience for easier manual testing and demonstration.**
+- **Simple web client at `/simulator` allows developers to interact with the AI logic directly, without Twilio, for rapid iteration and debugging.**
+- **The `/simulator` UI now provides a modern, side-by-side chat and journal experience for easier manual testing and demonstration.**
 
 ### End-to-End Tests (Cypress)
 - Full message flow

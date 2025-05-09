@@ -32,7 +32,7 @@ interface JournalEntry {
 
 const TEST_PHONE = "+1555555555";
 
-export default function TestChatPage() {
+export default function SimulatorPage() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
@@ -43,7 +43,7 @@ export default function TestChatPage() {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await fetch(`/api/test-chat?from=${encodeURIComponent(TEST_PHONE)}`);
+        const res = await fetch(`/api/simulator?from=${encodeURIComponent(TEST_PHONE)}`);
         const data = await res.json();
         if (res.ok && Array.isArray(data.messages)) {
           setMessages(
@@ -77,7 +77,7 @@ export default function TestChatPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/test-chat", {
+      const res = await fetch("/api/simulator", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input, from: TEST_PHONE }),
