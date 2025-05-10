@@ -19,7 +19,7 @@ export async function generateResponse(message: string, context?: { from?: strin
   });
   try {
     let messages: OpenAI.ChatCompletionMessageParam[] = [
-      { role: 'system', content: getSystemPrompt() },
+      { role: 'system', content: getSystemPrompt(new Date()) },
     ];
     console.log('generateResponse: context', context);
     if (context?.conversationId) {

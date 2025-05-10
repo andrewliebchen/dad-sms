@@ -57,7 +57,7 @@ export async function generateJournalEntry(messages: { content: string; directio
   const completion = await openai.chat.completions.create({
     model: 'o4-mini-2025-04-16',
     messages: [
-      { role: 'system', content: getSystemPrompt() },
+      { role: 'system', content: getSystemPrompt(new Date()) },
       { role: 'user', content: prompt },
     ],
   });
