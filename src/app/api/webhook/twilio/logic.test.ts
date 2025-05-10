@@ -1,8 +1,5 @@
-import { processTwilioWebhook, TwilioWebhookEnv, TwilioClient } from './logic'
-
 const mockUser = { id: 'user-1', phoneNumber: '+1234567890' }
 const mockConversation = { id: 'conv-1', userId: 'user-1' }
-const mockMessage = 'Hello Dad!'
 const mockResponse = 'Hi, son!'
 
 jest.mock('@/services/user', () => ({
@@ -94,11 +91,11 @@ describe('processTwilioWebhook', () => {
 
   it('returns 500 on unexpected error', async () => {
     const { processTwilioWebhook } = await import('./logic');
-    const errorArgs = {
+    const errorArgs: typeof baseArgs & { text: () => Promise<string> } = {
       ...baseArgs,
       text: () => { throw new Error('fail') },
     }
-    const result = await processTwilioWebhook(errorArgs as any)
+    const result = await processTwilioWebhook(errorArgs)
     expect(result.status).toBe(500)
     expect(result.body).toMatch(/Internal Server Error/)
   })
