@@ -1,6 +1,24 @@
 /**
  * @jest-environment node
  */
+jest.setTimeout(20000);
+
+jest.mock('openai', () => {
+  return jest.fn().mockImplementation(() => ({
+    chat: {
+      completions: {
+        create: jest.fn().mockResolvedValue({
+          choices: [{ message: { content: 'Mocked journal entry.' } }],
+        }),
+      },
+    },
+  }));
+});
+
+jest.mock('../openai/dad', () => ({
+  getSystemPrompt: () => 'System prompt',
+}));
+
 import { PrismaClient } from '@prisma/client';
 import * as journal from '../journal';
 import * as messageService from '../message';
@@ -8,19 +26,16 @@ import * as messageService from '../message';
 let prisma: PrismaClient;
 let userId: string;
 let conversationId: string;
-let transaction: any;
 
 beforeAll(() => {
   prisma = new PrismaClient();
 });
 
 beforeEach(async () => {
-  transaction = await prisma.$transaction([ // Start a transaction for isolation
-    prisma.journalEntry.deleteMany(),
-    prisma.message.deleteMany(),
-    prisma.conversation.deleteMany(),
-    prisma.user.deleteMany({ where: { phoneNumber: '+15555555555' } }),
-  ]);
+  await prisma.journalEntry.deleteMany();
+  await prisma.message.deleteMany();
+  await prisma.conversation.deleteMany();
+  await prisma.user.deleteMany({ where: { phoneNumber: '+15555555555' } });
   const user = await prisma.user.create({ data: { phoneNumber: '+15555555555' } });
   userId = user.id;
   const conversation = await prisma.conversation.create({ data: { userId, tags: [] } });
@@ -70,22 +85,6 @@ describe('Journal Service', () => {
   });
 
   describe('generateJournalEntry', () => {
-    beforeAll(() => {
-      jest.mock('openai', () => {
-        return jest.fn().mockImplementation(() => ({
-          chat: {
-            completions: {
-              create: jest.fn().mockResolvedValue({
-                choices: [{ message: { content: 'Mocked journal entry.' } }],
-              }),
-            },
-          },
-        }));
-      });
-      jest.mock('../openai/dad', () => ({
-        getSystemPrompt: () => 'System prompt',
-      }));
-    });
     it('should generate a journal entry using OpenAI (mocked)', async () => {
       const messages = [
         { content: 'Hi Dad', direction: 'INCOMING' },
@@ -95,34 +94,28 @@ describe('Journal Service', () => {
       expect(result).toBe('Mocked journal entry.');
     });
     it('should handle OpenAI API failure', async () => {
-      const OpenAI = require('openai');
-      OpenAI.mockImplementationOnce(() => ({
-        chat: { completions: { create: jest.fn().mockRejectedValue(new Error('OpenAI error')) } },
-      }));
-      const messages = [
-        { content: 'Hi Dad', direction: 'INCOMING' },
-      ];
-      await expect(journal.generateJournalEntry(messages)).rejects.toThrow('OpenAI error');
-    });
-  });
-
-  describe('handleMessageBufferAndJournal', () => {
-    beforeAll(() => {
-      jest.mock('openai', () => {
+      jest.resetModules();
+      jest.doMock('openai', () => {
         return jest.fn().mockImplementation(() => ({
           chat: {
             completions: {
-              create: jest.fn().mockResolvedValue({
-                choices: [{ message: { content: 'Mocked journal entry.' } }],
-              }),
+              create: jest.fn().mockRejectedValue(new Error('OpenAI error')),
             },
           },
         }));
       });
-      jest.mock('../openai/dad', () => ({
+      jest.doMock('../openai/dad', () => ({
         getSystemPrompt: () => 'System prompt',
       }));
+      const { generateJournalEntry } = require('../journal');
+      const messages = [
+        { content: 'Hi Dad', direction: 'INCOMING' },
+      ];
+      await expect(generateJournalEntry(messages)).rejects.toThrow('OpenAI error');
     });
+  });
+
+  describe('handleMessageBufferAndJournal', () => {
     it('should create a journal entry and mark messages as journaled when buffer is met', async () => {
       for (let i = 0; i < 3; i++) {
         await messageService.createMessage(conversationId, `User message ${i + 1}`, 'INCOMING');
