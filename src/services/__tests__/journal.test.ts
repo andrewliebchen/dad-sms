@@ -22,6 +22,7 @@ jest.mock('../openai/dad', () => ({
 import { PrismaClient } from '@prisma/client';
 import * as journal from '../journal';
 import * as messageService from '../message';
+import { generateJournalEntry } from '../journal';
 
 let prisma: PrismaClient;
 let userId: string;
@@ -107,7 +108,6 @@ describe('Journal Service', () => {
       jest.doMock('../openai/dad', () => ({
         getSystemPrompt: () => 'System prompt',
       }));
-      const { generateJournalEntry } = require('../journal');
       const messages = [
         { content: 'Hi Dad', direction: 'INCOMING' },
       ];

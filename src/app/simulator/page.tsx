@@ -35,8 +35,6 @@ interface User {
   phoneNumber: string;
 }
 
-const TEST_PHONE = "+1555555555";
-
 export default function SimulatorPage() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);

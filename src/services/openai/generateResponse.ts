@@ -2,7 +2,15 @@ import 'openai/shims/node';
 import OpenAI from 'openai';
 import { getSystemPrompt } from './dad';
 import { getRecentMessages } from '../message';
-import { getRecentJournalEntries } from '../journal';
+import { getRecentJournalEntries, Message as JournalMessage } from '../journal';
+
+// Local type for journal entries (no 'direction')
+type JournalEntry = {
+  id: string;
+  conversationId: string;
+  content: string;
+  createdAt: Date;
+};
 
 export async function generateResponse(message: string, context?: { from?: string; conversationId?: string }): Promise<string> {
   const openai = new OpenAI({
@@ -22,9 +30,9 @@ export async function generateResponse(message: string, context?: { from?: strin
       if (journalEntries.length > 0) {
         messages.push({
           role: 'system',
-          content: `--- Dad's Journal Entries (Memory) ---\nThese are Dad's private reflections and memories about his relationship with his son. Use them to inform Dad's responses, personality, and emotional continuity.\n\n${journalEntries
+          content: `--- Dad's Journal Entries (Memory) ---\nThese are Dad's private reflections and memories about his relationship with his son. Use them to inform Dad's responses, personality, and emotional continuity.\n\n${(journalEntries as JournalEntry[])
             .reverse()
-            .map((entry: any, i: number) => `Entry ${i + 1}: ${entry.content}`)
+            .map((entry: JournalEntry, i: number) => `Entry ${i + 1}: ${entry.content}`)
             .join('\n\n')}`,
         } as OpenAI.ChatCompletionMessageParam);
       }
@@ -32,9 +40,9 @@ export async function generateResponse(message: string, context?: { from?: strin
       const recentMessages = await getRecentMessages(context.conversationId, 10);
       console.log('generateResponse: fetched recent messages', recentMessages);
       messages = messages.concat(
-        recentMessages
+        (recentMessages as JournalMessage[])
           .reverse()
-          .map((msg: any) => ({
+          .map((msg: JournalMessage) => ({
             role: msg.direction === 'INCOMING' ? 'user' : 'assistant',
             content: msg.content,
           }) as OpenAI.ChatCompletionMessageParam)

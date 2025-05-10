@@ -1,7 +1,7 @@
 import { generateResponse } from '@/services/openai/generateResponse'
 import { getOrCreateUserByPhoneNumber } from '@/services/user'
 import { getOrCreateConversationByUserId } from '@/services/conversation'
-import { createMessage, getRecentMessages } from '@/services/message'
+import { createMessage } from '@/services/message'
 
 export interface TwilioWebhookEnv {
   TWILIO_AUTH_TOKEN: string

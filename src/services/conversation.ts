@@ -1,6 +1,5 @@
 // Conversation storage service for CRUD operations
 import { PrismaClient } from '@prisma/client';
-import { createJournalEntry, getRecentJournalEntries, handleMessageBufferAndJournal } from './journal';
 
 const prisma = new PrismaClient();
 type Conversation = Awaited<ReturnType<typeof prisma.conversation.create>>;
