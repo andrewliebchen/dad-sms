@@ -51,10 +51,10 @@ export async function generateResponse(message: string, context?: { from?: strin
     messages.push({ role: 'user', content: message } as OpenAI.ChatCompletionMessageParam);
     console.log('OpenAI prompt messages:', JSON.stringify(messages, null, 2));
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o-2024-08-06',
       messages,
       max_tokens: 200,
-      temperature: 0.8,
+      temperature: 1.0,
       user: context?.from,
     });
     return completion.choices[0]?.message?.content?.trim() || 'Sorry, I had trouble thinking of a response.';
