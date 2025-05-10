@@ -1,3 +1,4 @@
+import 'openai/shims/node';
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 import OpenAI from 'openai';

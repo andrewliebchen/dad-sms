@@ -56,4 +56,6 @@ export async function getOrCreateConversationByUserId(userId: string, tags?: str
     conversation = await createConversation(userId, tags);
   }
   return conversation;
-} 
+}
+
+export { handleMessageBufferAndJournal } from './journal' 
