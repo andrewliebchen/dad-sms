@@ -1,0 +1,164 @@
+.simulatorRoot {
+  height: 100vh;
+  width: 100vw;
+  background: var(--color-bg);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  box-sizing: border-box;
+  flex-direction: row;
+}
+
+.chatPanel {
+  flex: 1;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.userSwitcher {
+  padding: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.userSelect {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--color-border-strong);
+  font-size: 15px;
+  width: 100%;
+}
+
+.chatMessages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+}
+
+.messageRow {
+  margin: 12px 0;
+  display: flex;
+}
+
+.messageBubble {
+  display: inline-block;
+  background: var(--color-bubble-ai);
+  color: var(--color-fg);
+  border-radius: 16px;
+  padding: 10px 18px;
+  max-width: 70%;
+  font-size: 16px;
+  box-shadow: var(--color-bubble-ai-shadow);
+}
+
+.messageBubble.user {
+  background: var(--color-bubble-user);
+  box-shadow: var(--color-bubble-user-shadow);
+}
+
+.inputForm {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.inputBox {
+  flex: 1;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--color-input-border);
+  font-size: 16px;
+  background: var(--color-input-bg);
+  color: var(--color-input-fg);
+}
+
+.sendButton {
+  padding: 0 24px;
+  font-size: 16px;
+  border-radius: 6px;
+  background: var(--color-send-bg);
+  color: var(--color-send-fg);
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+.sendButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.error {
+  color: var(--color-error);
+  margin-top: 8px;
+}
+
+.journalPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.journalEntries {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--color-panel-bg);
+  border-left: 1px solid var(--color-border);
+  padding: 12px;
+}
+
+.journalEntry {
+  background: var(--color-journal-bg);
+  border: 1px solid var(--color-journal-border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  position: relative;
+}
+
+.journalEntryDate {
+  font-size: 13px;
+  color: var(--color-journal-date);
+  margin-bottom: 6px;
+}
+
+.journalEntryContent {
+  white-space: pre-line;
+  font-size: 16px;
+  color: var(--color-journal-content);
+}
+
+.deleteButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--color-delete-bg);
+  color: var(--color-delete-fg);
+  border: none;
+  border-radius: 4px;
+  padding: 2px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+.deleteButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (max-width: 900px) {
+  .simulatorRoot {
+    flex-direction: column !important;
+    gap: 24px !important;
+  }
+
+  
+} 

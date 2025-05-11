@@ -1,39 +1,70 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: #fff;
+  --color-fg: #222;
+  --color-border: #e3e7ee;
+  --color-border-strong: #cbd5e1;
+  --color-border-journal: #e5e7eb;
+  --color-panel-bg: #f8fafc;
+  --color-panel-bg-alt: #fff;
+  --color-bubble-user: rgba(0,0,0,0.05);
+  --color-bubble-ai: #e7f6e7;
+  --color-bubble-user-shadow: 0 1px 4px rgba(59,130,246,0.08);
+  --color-bubble-ai-shadow: 0 1px 4px rgba(34,197,94,0.08);
+  --color-journal-bg: #fff;
+  --color-journal-border: #e5e7eb;
+  --color-journal-date: #64748b;
+  --color-journal-content: #222;
+  --color-delete-bg: rgba(0,0,0,0.05);
+  --color-delete-fg: #222;
+  --color-input-bg: #f8fafc;
+  --color-input-fg: #222;
+  --color-input-border: #cbd5e1;
+  --color-send-bg: #2563eb;
+  --color-send-fg: #fff;
+  --color-error: #e11d48;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-bg: #18181b;
+    --color-fg: #ededed;
+    --color-border: #334155;
+    --color-border-strong: #334155;
+    --color-border-journal: #334155;
+    --color-panel-bg: #23272f;
+    --color-panel-bg-alt: #18181b;
+    --color-bubble-user: #1e293b;
+    --color-bubble-ai: #23272f;
+    --color-bubble-user-shadow: 0 1px 4px rgba(59,130,246,0.08);
+    --color-bubble-ai-shadow: 0 1px 4px rgba(59,130,246,0.08);
+    --color-journal-bg: #18181b;
+    --color-journal-border: #334155;
+    --color-journal-date: #a3a3a3;
+    --color-journal-content: #ededed;
+    --color-delete-bg: #23272f;
+    --color-delete-fg: #ededed;
+    --color-input-bg: #23272f;
+    --color-input-fg: #ededed;
+    --color-input-border: #334155;
+    --color-send-bg: #2563eb;
+    --color-send-fg: #fff;
+    --color-error: #fb7185;
   }
 }
 
+@theme inline {
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-fg);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-bg);
+  color: var(--color-fg);
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Message bubble styles */
-.message-bubble {
-  color: #000 !important; /* Always black text */
-  padding: 6px 12px;
-  border-radius: 16px;
-  display: inline-block;
-  background: #f1f8e9;
-}
-
-.message-bubble.user {
-  background: #e0f7fa;
-}
+/* Remove old message bubble styles */
