@@ -9,12 +9,12 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user }) {
       // Only allow specific email(s) from env
       const allowlist = (process.env.NEXTAUTH_ALLOWLIST || "").split(",").map(e => e.trim()).filter(Boolean);
       return allowlist.includes(user.email!);
     },
-    async session({ session, token, user }) {
+    async session({ session }) {
       // Optionally add custom session logic here
       return session;
     },

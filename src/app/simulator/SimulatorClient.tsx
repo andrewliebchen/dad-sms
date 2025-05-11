@@ -124,7 +124,7 @@ export function SimulatorClient() {
     setMsgHasMore(true);
     setJournalHasMore(true);
     fetchMessagesAndJournal(selectedUser, true);
-  }, [selectedUser]);
+  }, [selectedUser, fetchMessagesAndJournal]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {

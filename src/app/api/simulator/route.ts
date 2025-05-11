@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateResponse } from '@/services/openai/generateResponse';
 import { getOrCreateConversationByUserId } from '@/services/conversation';
-import { getRecentJournalEntries } from '@/services/journal';
 import { createMessage } from '@/services/message';
 import { getOrCreateUserByPhoneNumber, getAllUsers } from '@/services/user';
 import { PrismaClient } from '@prisma/client';
