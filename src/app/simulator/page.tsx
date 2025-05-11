@@ -96,7 +96,14 @@ export default function SimulatorPage() {
         setError(data.error || "Failed to load messages");
       }
       if (Array.isArray(data.journalEntries)) {
-        setJournalEntries(reset ? data.journalEntries : (entries) => [...entries, ...data.journalEntries]);
+        setJournalEntries(reset
+          ? data.journalEntries
+          : (entries) => {
+              const existingIds = new Set(entries.map((e: JournalEntry) => e.id));
+              const newUnique = data.journalEntries.filter((e: JournalEntry) => !existingIds.has(e.id));
+              return [...entries, ...newUnique];
+            }
+        );
         setJournalHasMore((data.totalJournalEntries || 0) > ((reset ? 0 : journalOffset) + data.journalEntries.length));
         if (reset) setJournalOffset(data.journalEntries.length);
         else setJournalOffset((prev) => prev + data.journalEntries.length);
