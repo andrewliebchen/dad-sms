@@ -20,6 +20,10 @@
 .userSwitcher {
   padding: 12px;
   border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
 }
 
 .userSelect {
@@ -28,6 +32,23 @@
   border: 1px solid var(--color-border-strong);
   font-size: 15px;
   width: 100%;
+}
+
+.deleteButton {
+  background: var(--color-delete-bg);
+  color: var(--color-delete-fg);
+  border: none;
+  border-radius: 4px;
+  padding: 2px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+.deleteButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .chatMessages {
@@ -126,6 +147,10 @@
   font-size: 13px;
   color: var(--color-journal-date);
   margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
 }
 
 .journalEntryContent {
@@ -134,25 +159,7 @@
   color: var(--color-journal-content);
 }
 
-.deleteButton {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: var(--color-delete-bg);
-  color: var(--color-delete-fg);
-  border: none;
-  border-radius: 4px;
-  padding: 2px 10px;
-  font-size: 13px;
-  cursor: pointer;
-  opacity: 1;
-  transition: opacity 0.2s;
-}
 
-.deleteButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
 
 @media (max-width: 900px) {
   .simulatorRoot {
