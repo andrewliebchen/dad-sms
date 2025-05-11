@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 interface Message {
   from: "user" | "ai";
@@ -45,6 +45,14 @@ export default function SimulatorPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<string>("");
   const chatRef = useRef<HTMLDivElement>(null);
+  const [msgOffset, setMsgOffset] = useState(0);
+  const [msgHasMore, setMsgHasMore] = useState(true);
+  const [msgLoadingMore, setMsgLoadingMore] = useState(false);
+  const [journalOffset, setJournalOffset] = useState(0);
+  const [journalHasMore, setJournalHasMore] = useState(true);
+  const [journalLoadingMore, setJournalLoadingMore] = useState(false);
+  const MSG_LIMIT = 20;
+  const JOURNAL_LIMIT = 10;
 
   // Fetch users on mount
   useEffect(() => {
@@ -63,38 +71,49 @@ export default function SimulatorPage() {
     fetchUsers();
   }, []);
 
-  // Extracted fetch logic for messages and journal entries
-  const fetchMessagesAndJournal = async (user: string) => {
+  // Fetch paginated messages and journal entries
+  const fetchMessagesAndJournal = useCallback(async (user: string, reset = false) => {
     try {
-      const res = await fetch(`/api/simulator?from=${encodeURIComponent(user)}`);
+      const res = await fetch(`/api/simulator?from=${encodeURIComponent(user)}&msgLimit=${MSG_LIMIT}&msgOffset=${reset ? 0 : msgOffset}&journalLimit=${JOURNAL_LIMIT}&journalOffset=${reset ? 0 : journalOffset}`);
       const data = await res.json();
       if (res.ok && Array.isArray(data.messages)) {
-        setMessages(
-          data.messages.map((msg: unknown) => {
-            if (isApiMessage(msg)) {
-              return {
-                from: msg.direction === 'INCOMING' ? 'user' : 'ai',
-                text: msg.content,
-              };
-            }
-            return { from: 'ai', text: '' };
-          })
-        );
-        if (Array.isArray(data.journalEntries)) {
-          setJournalEntries(data.journalEntries);
-        }
+        const newMessages = data.messages.map((msg: unknown) => {
+          if (isApiMessage(msg)) {
+            return {
+              from: msg.direction === 'INCOMING' ? 'user' : 'ai',
+              text: msg.content,
+            };
+          }
+          return { from: 'ai', text: '' };
+        });
+        setMessages(reset ? newMessages : (msgs) => [...newMessages, ...msgs]);
+        setMsgHasMore((data.totalMessages || 0) > ((reset ? 0 : msgOffset) + newMessages.length));
+        if (reset) setMsgOffset(newMessages.length);
+        else setMsgOffset((prev) => prev + newMessages.length);
       } else {
         setError(data.error || "Failed to load messages");
+      }
+      if (Array.isArray(data.journalEntries)) {
+        setJournalEntries(reset ? data.journalEntries : (entries) => [...entries, ...data.journalEntries]);
+        setJournalHasMore((data.totalJournalEntries || 0) > ((reset ? 0 : journalOffset) + data.journalEntries.length));
+        if (reset) setJournalOffset(data.journalEntries.length);
+        else setJournalOffset((prev) => prev + data.journalEntries.length);
       }
     } catch {
       setError("Network error");
     }
-  };
+  }, [msgOffset, journalOffset]);
 
-  // Fetch messages/journal when selectedUser changes
+  // Fetch on user change (reset offsets)
   useEffect(() => {
     if (!selectedUser) return;
-    fetchMessagesAndJournal(selectedUser);
+    setMsgOffset(0);
+    setJournalOffset(0);
+    setMessages([]);
+    setJournalEntries([]);
+    setMsgHasMore(true);
+    setJournalHasMore(true);
+    fetchMessagesAndJournal(selectedUser, true);
   }, [selectedUser]);
 
   // Auto-scroll to bottom when messages change
@@ -154,6 +173,28 @@ export default function SimulatorPage() {
     }
   };
 
+  // Infinite scroll for messages (chat)
+  const handleChatScroll = async (e: React.UIEvent<HTMLDivElement>) => {
+    if (msgLoadingMore || !msgHasMore) return;
+    const el = e.currentTarget;
+    if (el.scrollTop < 60) {
+      setMsgLoadingMore(true);
+      await fetchMessagesAndJournal(selectedUser);
+      setMsgLoadingMore(false);
+    }
+  };
+
+  // Infinite scroll for journal entries
+  const handleJournalScroll = async (e: React.UIEvent<HTMLDivElement>) => {
+    if (journalLoadingMore || !journalHasMore) return;
+    const el = e.currentTarget;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 60) {
+      setJournalLoadingMore(true);
+      await fetchMessagesAndJournal(selectedUser);
+      setJournalLoadingMore(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -198,7 +239,9 @@ export default function SimulatorPage() {
             overflowX: "hidden",
             padding: 12,
           }}
+          onScroll={handleChatScroll}
         >
+          {msgLoadingMore && <div style={{ textAlign: 'center', color: '#888' }}>Loading more...</div>}
           {messages.length === 0 && <div style={{ color: "#888", padding: 16 }}>No messages yet.</div>}
           {messages.map((msg, i) => (
             <div
@@ -212,7 +255,7 @@ export default function SimulatorPage() {
               <span
                 style={{
                   display: "inline-block",
-                  background: msg.from === "user" ? "#dbeafe" : "#e7f6e7",
+                  background: msg.from === "user" ? "rgba(0,0,0,0.05)" : "#e7f6e7",
                   color: "#222",
                   borderRadius: 16,
                   padding: "10px 18px",
@@ -281,6 +324,7 @@ export default function SimulatorPage() {
             borderLeft: "1px solid #e3e7ee",
             padding: 12,
           }}
+          onScroll={handleJournalScroll}
         >
           {journalEntries.length === 0 && <div style={{ color: "#888", padding: 16 }}>No journal entries yet.</div>}
           {journalEntries.map((entry) => (
@@ -322,6 +366,7 @@ export default function SimulatorPage() {
               </button>
             </div>
           ))}
+          {journalLoadingMore && <div style={{ textAlign: 'center', color: '#888' }}>Loading more...</div>}
         </div>
       </div>
       {/* Responsive: stack vertically on small screens */}
@@ -338,4 +383,4 @@ export default function SimulatorPage() {
       `}</style>
     </div>
   );
-} 
+}

@@ -44,7 +44,7 @@ export async function generateJournalEntry(messages: { content: string; directio
     apiKey: process.env.OPENAI_API_KEY,
     dangerouslyAllowBrowser: process.env.NODE_ENV === 'test',
   });
-  let prompt = `You are Dad, keeping a private journal about your ongoing SMS relationship with your son. Reflect on the last 10 messages (5 from you, 5 from your son). Consider what he has told you, what it means for your relationship, and how you feel about it.\n\nWrite a single, concise paragraph (no more than 4 sentences) capturing your most important thoughts, observations, and plans about your relationship with your son. Do NOT include a date or greeting. Focus on what matters most to you as Dad in this moment.`;
+  let prompt = `You are Dad, keeping a private journal about your ongoing SMS relationship with your son. Reflect on the last 10 messages (5 from you, 5 from your son). Consider what he has told you, what it means for your relationship, and how you feel about it.\n\nWrite a single, concise paragraph (no more than 4 sentences) capturing your most important thoughts, observations, and plans about your relationship with your son. Do NOT include a date or greeting. Focus on what matters most to you as Dad in this moment. Try not to repeat things from other journal entries, unless you've learned somethign new.`;
   if (lastJournalEntry) {
     prompt += `\n\nYour previous journal entry was:\n\"\"\"${lastJournalEntry}\"\"\"\n\nBuild on your previous reflections if relevant.`;
   }

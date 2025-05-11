@@ -45,12 +45,37 @@ export async function GET(req: NextRequest) {
     const from = searchParams.get('from') || 'web-client';
     const user = await getOrCreateUserByPhoneNumber(from);
     const conversation = await getOrCreateConversationByUserId(user.id);
-    const messages = await prisma.message.findMany({
-      where: { conversationId: conversation.id },
-      orderBy: { createdAt: 'asc' },
+    // Pagination params
+    const msgLimit = parseInt(searchParams.get('msgLimit') || '20', 10);
+    const msgOffset = parseInt(searchParams.get('msgOffset') || '0', 10);
+    const journalLimit = parseInt(searchParams.get('journalLimit') || '10', 10);
+    const journalOffset = parseInt(searchParams.get('journalOffset') || '0', 10);
+    // Messages with pagination
+    const [messages, totalMessages] = await Promise.all([
+      prisma.message.findMany({
+        where: { conversationId: conversation.id },
+        orderBy: { createdAt: 'asc' },
+        skip: msgOffset,
+        take: msgLimit,
+      }),
+      prisma.message.count({ where: { conversationId: conversation.id } }),
+    ]);
+    // Journal entries with pagination
+    const [journalEntries, totalJournalEntries] = await Promise.all([
+      prisma.journalEntry.findMany({
+        where: { conversationId: conversation.id },
+        orderBy: { createdAt: 'desc' },
+        skip: journalOffset,
+        take: journalLimit,
+      }),
+      prisma.journalEntry.count({ where: { conversationId: conversation.id } }),
+    ]);
+    return NextResponse.json({
+      messages,
+      totalMessages,
+      journalEntries,
+      totalJournalEntries,
     });
-    const journalEntries = await getRecentJournalEntries(conversation.id, 5);
-    return NextResponse.json({ messages, journalEntries });
   } catch (error) {
     console.error('Error fetching messages:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
