@@ -112,7 +112,7 @@ export function SimulatorClient() {
     } catch {
       setError("Network error");
     }
-  }, [msgOffset, journalOffset]);
+  }, []);
 
   // Fetch on user change (reset offsets)
   useEffect(() => {
@@ -124,7 +124,7 @@ export function SimulatorClient() {
     setMsgHasMore(true);
     setJournalHasMore(true);
     fetchMessagesAndJournal(selectedUser, true);
-  }, [selectedUser, fetchMessagesAndJournal]);
+  }, [selectedUser]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
