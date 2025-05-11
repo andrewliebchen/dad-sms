@@ -335,7 +335,7 @@ export default function SimulatorPage() {
                 border: "1px solid #e5e7eb",
                 borderRadius: 8,
                 padding: 16,
-                marginBottom: 16,
+                marginBottom: 8,
                 boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
                 position: 'relative',
               }}
