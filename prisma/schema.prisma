@@ -14,6 +14,10 @@ model User {
   updatedAt     DateTime       @updatedAt
   conversations Conversation[]
   metadata      Json?
+  smsOptIn      Boolean        @default(false)
+  smsOptInAt    DateTime?
+  smsOptOutAt   DateTime?
+  smsOptInMethod String?
 }
 
 model Conversation {
